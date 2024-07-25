@@ -5,12 +5,13 @@ import itertools
 import matplotlib.pyplot as plt
 from statsmodels.stats.anova import anova_lm
 from statsmodels.formula.api import ols
+from scipy import stats
 
 # Set the page title and layout
 st.set_page_config(page_title="DOE-Based Feature Selection", layout="wide")
 
 # Title of the app
-st.title('Design of Experiments based Features Selection')
+st.title('DOE-Based Feature Selection with Minitab Functionalities')
 
 # Sidebar for uploading the dataset
 st.sidebar.header('Upload Dataset')
@@ -99,13 +100,23 @@ try:
                 def plot_partial_effects(model, design, response):
                     fig, axes = plt.subplots(1, len(design.columns), figsize=(15, 5))
                     for i, factor in enumerate(design.columns):
-                        pred_vals = model.predict(pd.DataFrame({factor: design[factor]}))
-                        axes[i].plot(design[factor], pred_vals, 'o-')
-                        axes[i].set_title(f'Partial Effect of {factor}')
-                        axes[i].set_xlabel(factor)
-                        axes[i].set_ylabel(response)
+                        try:
+                            pred_vals = model.predict(pd.DataFrame({factor: design[factor]}))
+                            axes[i].plot(design[factor], pred_vals, 'o-')
+                            axes[i].set_title(f'Partial Effect of {factor}')
+                            axes[i].set_xlabel(factor)
+                            axes[i].set_ylabel(response)
+                        except Exception as e:
+                            st.error(f"Error in plotting partial effects for {factor}: {e}")
                     st.pyplot(fig)
                     st.write("**Partial Effect Plot:** This plot shows the partial effect of each factor on the response variable. It helps understand the relationship between each factor and the response.")
+
+                def plot_normal_probability_plot(model):
+                    residuals = model.resid
+                    stats.probplot(residuals, dist="norm", plot=plt)
+                    plt.title('Normal Probability Plot of the Effects')
+                    st.pyplot()
+                    st.write("**Normal Probability Plot:** This plot shows if the residuals follow a normal distribution. Points should fall roughly along the reference line if the residuals are normally distributed.")
 
                 st.write("### Charts")
 
@@ -113,6 +124,7 @@ try:
                 plot_interactions(design, response)
                 plot_pareto_effects(anova_results)
                 plot_partial_effects(model, design, response)
+                plot_normal_probability_plot(model)
 
                 st.header('Conclusion and Recommendations')
                 st.write("""
