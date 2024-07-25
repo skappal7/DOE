@@ -63,7 +63,8 @@ if uploaded_file is not None:
             plt.figure(figsize=(10, 6))
             for i, factor in enumerate(design.columns):
                 plt.subplot(1, len(design.columns), i+1)
-                plt.plot(design[factor], data[response], 'o-')
+                means = data.groupby(factor)[response].mean()
+                plt.plot(means.index, means.values, 'o-')
                 plt.title(f'Main Effect of {factor}')
                 plt.xlabel(factor)
                 plt.ylabel(response)
@@ -73,10 +74,11 @@ if uploaded_file is not None:
             plt.figure(figsize=(10, 6))
             for i, (f1, f2) in enumerate(itertools.combinations(design.columns, 2)):
                 plt.subplot(1, len(list(itertools.combinations(design.columns, 2))), i+1)
-                plt.plot(design[f1], design[f2], 'o-')
+                means = data.groupby([f1, f2])[response].mean().unstack()
+                means.plot(kind='line', marker='o', ax=plt.gca())
                 plt.title(f'Interaction between {f1} and {f2}')
                 plt.xlabel(f1)
-                plt.ylabel(f2)
+                plt.ylabel(response)
             st.pyplot(plt)
 
         def plot_pareto_effects(anova_results):
@@ -100,16 +102,15 @@ if uploaded_file is not None:
                 plt.ylabel(response)
             st.pyplot(plt)
 
-        if st.button('Show Main Effects'):
+        chart_type = st.selectbox('Select Chart Type', ['Main Effects', 'Interactions', 'Pareto Effects', 'Partial Effects'])
+
+        if chart_type == 'Main Effects':
             plot_main_effects(design, response)
-
-        if st.button('Show Interactions'):
+        elif chart_type == 'Interactions':
             plot_interactions(design, response)
-
-        if st.button('Show Pareto Effects'):
+        elif chart_type == 'Pareto Effects':
             plot_pareto_effects(anova_results)
-
-        if st.button('Show Partial Effects'):
+        elif chart_type == 'Partial Effects':
             plot_partial_effects(model, design, response)
 
         st.header('Conclusion and Recommendations')
