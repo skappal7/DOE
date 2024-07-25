@@ -80,10 +80,11 @@ if uploaded_file is not None:
                 axes[i].set_xlabel(f1)
                 axes[i].set_ylabel(response)
             st.pyplot(fig)
-            st.write("**Interaction Plot:** This plot shows the interaction between pairs of factors. It helps identify if the combined effect of two factors is different from their individual effects.")
+            st.write("**Interaction Plot:** This plot shows the interaction between pairs of factors and their combined effect on the response variable.")
 
         def plot_pareto_effects(anova_results):
             effects = anova_results["sum_sq"]
+            effects.index = anova_results.index
             effects.sort_values(ascending=False, inplace=True)
             fig, ax = plt.subplots(figsize=(10, 6))
             effects.plot(kind='bar', ax=ax)
