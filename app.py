@@ -101,7 +101,7 @@ try:
                     fig, axes = plt.subplots(1, len(design.columns), figsize=(15, 5))
                     for i, factor in enumerate(design.columns):
                         try:
-                            pred_vals = model.predict(pd.DataFrame({factor: design[factor]}))
+                            pred_vals = model.predict(pd.DataFrame({factor: pd.Categorical(design[factor], categories=data[factor].unique())}))
                             axes[i].plot(design[factor], pred_vals, 'o-')
                             axes[i].set_title(f'Partial Effect of {factor}')
                             axes[i].set_xlabel(factor)
@@ -113,9 +113,10 @@ try:
 
                 def plot_normal_probability_plot(model):
                     residuals = model.resid
+                    fig = plt.figure(figsize=(10, 6))
                     stats.probplot(residuals, dist="norm", plot=plt)
                     plt.title('Normal Probability Plot of the Effects')
-                    st.pyplot()
+                    st.pyplot(fig)
                     st.write("**Normal Probability Plot:** This plot shows if the residuals follow a normal distribution. Points should fall roughly along the reference line if the residuals are normally distributed.")
 
                 st.write("### Charts")
