@@ -97,12 +97,19 @@ try:
                     st.pyplot(fig)
                     st.write("**Pareto Effect Chart:** This chart shows the sum of squares of each factor. It helps identify the most significant factors affecting the response variable.")
 
-                def plot_partial_effects(model, design, response):
+                def plot_partial_effects(model, design, response, factors):
                     fig, axes = plt.subplots(1, len(design.columns), figsize=(15, 5))
                     for i, factor in enumerate(design.columns):
                         try:
-                            pred_vals = model.predict(pd.DataFrame({factor: pd.Categorical(design[factor], categories=data[factor].unique())}))
-                            axes[i].plot(design[factor], pred_vals, 'o-')
+                            # Create a DataFrame with all factors set to their mean values
+                            pred_data = pd.DataFrame({col: [data[col].mean()] * len(data[factor].unique()) for col in factors})
+                            # Vary only the current factor
+                            pred_data[factor] = data[factor].unique()
+                            
+                            # Predict using the model
+                            pred_vals = model.predict(pred_data)
+                            
+                            axes[i].plot(pred_data[factor], pred_vals, 'o-')
                             axes[i].set_title(f'Partial Effect of {factor}')
                             axes[i].set_xlabel(factor)
                             axes[i].set_ylabel(response)
@@ -124,7 +131,7 @@ try:
                 plot_main_effects(design, response)
                 plot_interactions(design, response)
                 plot_pareto_effects(anova_results)
-                plot_partial_effects(model, design, response)
+                plot_partial_effects(model, design, response, factors)
                 plot_normal_probability_plot(model)
 
                 st.header('Conclusion and Recommendations')
