@@ -60,58 +60,56 @@ if uploaded_file is not None:
         st.write(anova_results)
 
         def plot_main_effects(design, response):
-            plt.figure(figsize=(10, 6))
+            fig, axes = plt.subplots(1, len(design.columns), figsize=(15, 5))
             for i, factor in enumerate(design.columns):
-                plt.subplot(1, len(design.columns), i+1)
                 means = data.groupby(factor)[response].mean()
-                plt.plot(means.index, means.values, 'o-')
-                plt.title(f'Main Effect of {factor}')
-                plt.xlabel(factor)
-                plt.ylabel(response)
-            st.pyplot(plt)
+                axes[i].plot(means.index, means.values, 'o-')
+                axes[i].set_title(f'Main Effect of {factor}')
+                axes[i].set_xlabel(factor)
+                axes[i].set_ylabel(response)
+            st.pyplot(fig)
+            st.write("**Main Effects Plot:** This plot shows the effect of each factor on the response variable. It helps identify which factors have the most significant impact.")
 
         def plot_interactions(design, response):
-            plt.figure(figsize=(10, 6))
-            for i, (f1, f2) in enumerate(itertools.combinations(design.columns, 2)):
-                plt.subplot(1, len(list(itertools.combinations(design.columns, 2))), i+1)
+            combinations = list(itertools.combinations(design.columns, 2))
+            fig, axes = plt.subplots(len(combinations), 1, figsize=(10, 5 * len(combinations)))
+            for i, (f1, f2) in enumerate(combinations):
                 means = data.groupby([f1, f2])[response].mean().unstack()
-                means.plot(kind='line', marker='o', ax=plt.gca())
-                plt.title(f'Interaction between {f1} and {f2}')
-                plt.xlabel(f1)
-                plt.ylabel(response)
-            st.pyplot(plt)
+                means.plot(kind='line', marker='o', ax=axes[i])
+                axes[i].set_title(f'Interaction between {f1} and {f2}')
+                axes[i].set_xlabel(f1)
+                axes[i].set_ylabel(response)
+            st.pyplot(fig)
+            st.write("**Interaction Plot:** This plot shows the interaction between pairs of factors. It helps identify if the combined effect of two factors is different from their individual effects.")
 
         def plot_pareto_effects(anova_results):
             effects = anova_results["sum_sq"]
             effects.sort_values(ascending=False, inplace=True)
-            plt.figure(figsize=(10, 6))
-            effects.plot(kind='bar')
-            plt.title('Pareto Effect Chart')
-            plt.xlabel('Factors')
-            plt.ylabel('Sum of Squares')
-            st.pyplot(plt)
+            fig, ax = plt.subplots(figsize=(10, 6))
+            effects.plot(kind='bar', ax=ax)
+            ax.set_title('Pareto Effect Chart')
+            ax.set_xlabel('Factors')
+            ax.set_ylabel('Sum of Squares')
+            st.pyplot(fig)
+            st.write("**Pareto Effect Chart:** This chart shows the sum of squares of each factor. It helps identify the most significant factors affecting the response variable.")
 
         def plot_partial_effects(model, design, response):
-            plt.figure(figsize=(10, 6))
-            for factor in design.columns:
-                plt.subplot(1, len(design.columns), design.columns.get_loc(factor) + 1)
+            fig, axes = plt.subplots(1, len(design.columns), figsize=(15, 5))
+            for i, factor in enumerate(design.columns):
                 pred_vals = model.predict(pd.DataFrame({factor: design[factor]}))
-                plt.plot(design[factor], pred_vals, 'o-')
-                plt.title(f'Partial Effect of {factor}')
-                plt.xlabel(factor)
-                plt.ylabel(response)
-            st.pyplot(plt)
+                axes[i].plot(design[factor], pred_vals, 'o-')
+                axes[i].set_title(f'Partial Effect of {factor}')
+                axes[i].set_xlabel(factor)
+                axes[i].set_ylabel(response)
+            st.pyplot(fig)
+            st.write("**Partial Effect Plot:** This plot shows the partial effect of each factor on the response variable. It helps understand the relationship between each factor and the response.")
 
-        chart_type = st.selectbox('Select Chart Type', ['Main Effects', 'Interactions', 'Pareto Effects', 'Partial Effects'])
+        st.write("### Charts")
 
-        if chart_type == 'Main Effects':
-            plot_main_effects(design, response)
-        elif chart_type == 'Interactions':
-            plot_interactions(design, response)
-        elif chart_type == 'Pareto Effects':
-            plot_pareto_effects(anova_results)
-        elif chart_type == 'Partial Effects':
-            plot_partial_effects(model, design, response)
+        plot_main_effects(design, response)
+        plot_interactions(design, response)
+        plot_pareto_effects(anova_results)
+        plot_partial_effects(model, design, response)
 
         st.header('Conclusion and Recommendations')
         st.write("""
